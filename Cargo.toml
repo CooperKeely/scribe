@@ -1,0 +1,8 @@
+[package]
+name = "scribe"
+version = "0.1.0"
+edition = "2021"
+ 
+[dependencies]
+crop = "=0.4.2"
+crossterm = "0.28.1"
