@@ -2,14 +2,14 @@ use std::io::{self, BufWriter, Stdout, Write};
 use crossterm::{cursor::*, execute, terminal::*};
 use std::cmp::min;
 
-pub struct Handler {
+pub struct Window{
     top: usize,
     bottom: usize,
     lines: usize,
     update: bool,
 }
 
-impl Handler {
+impl Window{
     pub fn new(lines: usize) -> Self {
         let height : usize = (size().expect("size didn't work").1 - 1).into();
         Self {
@@ -24,10 +24,10 @@ impl Handler {
         &mut self,
         data: & Vec<String>,
         write_buffer: &mut BufWriter<Stdout>
-    ) -> io::Result<()> {
+    ){
         // update window values
         if !self.update {
-            return Ok(());
+            return; 
         }
 
         // Save cursor clear terminal
@@ -58,7 +58,6 @@ impl Handler {
         ).expect("execute1() Failed");
 
         self.update = false;
-        Ok(())
     }
 
     pub fn resize(&mut self, _width: usize, height: usize) {
