@@ -3,12 +3,12 @@ pub mod file;
 
 use file::FileIO;
 use window::Window;
-use std::io::BufWriter;
-use std::io;
-use std::io::Stdout;
+use std::io::{ stdout, Error };
 use std::path::Path;
-use crossterm::{event::*};
+use crossterm::{event::*, execute, cursor::{MoveLeft, MoveRight}};
 
+#[derive(Debug)]
+#[derive(PartialEq)]
 enum EditorMode{
     INSERT,
     NORMAL,
@@ -20,8 +20,7 @@ enum EditorMode{
 pub struct Editor{
     mode: EditorMode,
     window: Window,
-    writeBuffer: BufWriter<Stdout>,
-    fileIO : FileIO, 
+    file_io: FileIO,
     file: Vec<String>,
 }
 
@@ -33,28 +32,52 @@ impl Editor{
         Editor{
             mode: EditorMode::NORMAL,
             window: Window::new(lines),
-            writeBuffer: BufWriter::new(io::stdout()),
-            fileIO: file_io,
+            file_io: file_io,
             file: file, 
         }
     }
+
     pub fn event_loop(&mut self){
         loop{ 
-            self.window.refresh(&self.file,&mut self.writeBuffer);
+            self.window.refresh(&self.file);
+            let status_line: String = format!("{:?}",self.mode);
+            self.window.status_bar(status_line);
+
             let event = match read(){
                 Ok(event) => event,
                 Err(e) => panic!("Error: {}", e),
             };
-            self.event_manager(event);
-            match self.mode{
-                EditorMode::EXIT => break,
-                _ => {},
-            }
 
+            match self.event_manager(event){
+                Ok(()) => {},
+                Err(e) => panic!("Error: {}", e),
+            }
+            if self.mode == EditorMode::EXIT {break}
         }
     }
 
-    fn event_manager(&self, _event: Event){
+    fn event_manager(&mut self, event: Event) -> Result<(), Error>{
+        use KeyCode::*;
+
+        if let Event::Key(KeyEvent {code, ..}) = event{
+            match code{
+                Up => self.window.scroll_up(),
+                Down => self.window.scroll_down(),
+                Left => execute!(stdout(), MoveLeft(1))?,
+                Right => execute!(stdout(), MoveRight(1))?,
+                Esc => self.mode = EditorMode::EXIT,
+                Char(c) => match c{
+                    'i' => self.mode = EditorMode::INSERT,
+                    'v' => self.mode = EditorMode::VISUAL,
+                    ':' => self.mode = EditorMode::COMMAND,
+                    _ => {},
+                }, 
+                _ => {},
+            }
+        }else if let Event::Resize(width,height) = event{
+            self.window.resize(width.into(), height.into());
+        }
+        Ok(())
     }
 
 }

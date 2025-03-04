@@ -11,7 +11,7 @@ impl FileIO{
     pub fn new(file_path: &Path) -> Self{ 
         let file: File = Self::open(file_path);
 
-        Self{
+        FileIO{
             file,
         }
     }

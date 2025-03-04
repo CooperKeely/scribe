@@ -1,4 +1,4 @@
-use std::io::{self, BufWriter, Stdout, Write};
+use std::io::{stdout,BufWriter, Stdout, Write};
 use crossterm::{cursor::*, execute, terminal::*};
 use std::cmp::min;
 
@@ -7,24 +7,22 @@ pub struct Window{
     bottom: usize,
     lines: usize,
     update: bool,
+    write_buffer: BufWriter<Stdout>,
 }
 
 impl Window{
     pub fn new(lines: usize) -> Self {
         let height : usize = (size().expect("size didn't work").1 - 1).into();
-        Self {
+        Window {
             top: 0,
             bottom: min(height, lines),
             lines,
             update: true,
+            write_buffer: BufWriter::new(stdout()),
         }
     }
 
-    pub fn refresh(
-        &mut self,
-        data: & Vec<String>,
-        write_buffer: &mut BufWriter<Stdout>
-    ){
+    pub fn refresh(&mut self, data: & Vec<String>){
         // update window values
         if !self.update {
             return; 
@@ -32,7 +30,7 @@ impl Window{
 
         // Save cursor clear terminal
         execute!(
-            io::stdout(),
+            stdout(),
             SavePosition,
             Clear(ClearType::All),
             MoveTo(0, 0),
@@ -42,7 +40,7 @@ impl Window{
         let rows: usize = (self.bottom - self.top).into();
         for (i, line) in data.into_iter().skip(self.top.into()).take(rows).enumerate() {
            write!(
-                write_buffer,
+                self.write_buffer,
                 "{:>3} {}\r\n",
                 self.top + i + 1,
                 line
@@ -50,14 +48,34 @@ impl Window{
         }
 
         // prints to standard out
-        write_buffer.flush().expect("flush() Failed");
+        self.write_buffer.flush().expect("flush() Failed");
 
         execute!(
-            io::stdout(),
+            stdout(),
             RestorePosition,
         ).expect("execute1() Failed");
 
         self.update = false;
+    }
+
+    pub fn status_bar(&mut self, status_line : String){
+        // move to line to print status bar
+        execute!(
+            stdout(),
+            SavePosition,
+            MoveToRow(self.bottom.try_into().unwrap()),
+            Clear(ClearType::CurrentLine),
+        ).expect("execute!() Failed");
+
+        write!(self.write_buffer, "{}", status_line).expect("write!() Failed");
+        self.write_buffer.flush().expect("flush() Failed");
+
+        execute!(
+            stdout(),
+            RestorePosition,
+        ).expect("execute!() Failed");
+
+
     }
 
     pub fn resize(&mut self, _width: usize, height: usize) {
@@ -75,7 +93,7 @@ impl Window{
         let pos: (u16, u16) = position().expect("position() Failed");
         let cursor_pos : (usize, usize) = (usize::from(pos.0), usize::from(pos.1));
         if cursor_pos.1 > 0 {
-            execute!(io::stdout(), MoveUp(1)).expect("MoveDown() Failed");
+            execute!(stdout(), MoveUp(1)).expect("MoveUp() Failed");
             return;
         }
         if self.top > 0 {
@@ -91,7 +109,7 @@ impl Window{
         let cursor_pos : (usize, usize) =  (usize::from(pos.0), usize::from(pos.1));
         let rows: usize = self.bottom - self.top;
         if cursor_pos.1 < rows{
-            execute!(io::stdout(), MoveDown(1)).expect("MoveDown() Failed");
+            execute!(stdout(), MoveDown(1)).expect("MoveDown() Failed");
             return;
         }
         if self.bottom < self.lines{

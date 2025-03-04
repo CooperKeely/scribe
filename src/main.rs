@@ -16,21 +16,20 @@ fn main() -> io::Result<()> {
     // get file path
     let file_path: &Path = Path::new(&args[1]);
 
-    open_scribe().expect("open_scribe() Failed");
+    open_scribe();
+    
     let mut editor = Editor::new(file_path);
     editor.event_loop();
-    close_scribe().expect("close_scribe() Failed");
+    
+    close_scribe();
 
     Ok(())
 }
     
-fn open_scribe() -> io::Result<()> {
-    match enable_raw_mode() {
-        Ok(()) => (),
-        Err(e) => println!("Error {e}: Couldn't enable raw mode"),
-    }
+fn open_scribe(){ 
+    enable_raw_mode().expect("Error {e}: Couldn't enable raw mode"); 
 
-    match execute!(
+    execute!(
         io::stdout(),
         EnableBracketedPaste,
         EnableFocusChange,
@@ -40,15 +39,11 @@ fn open_scribe() -> io::Result<()> {
         EnterAlternateScreen,
         SetTitle("Scribe"),
         DisableLineWrap
-    ) {
-        Ok(()) => (),
-        Err(e) => println!("Error {e}: Couldn't create new terminal process"),
-    }
-    Ok(())
+    ).expect("Error {e}: Couldn't create new terminal process");
 }
 
-fn close_scribe() -> io::Result<()> {
-    match execute!(
+fn close_scribe() {
+    execute!(
         io::stdout(),
         LeaveAlternateScreen,
         DisableBracketedPaste,
@@ -56,14 +51,7 @@ fn close_scribe() -> io::Result<()> {
         DisableMouseCapture,
         DisableBlinking,
         EnableLineWrap
-    ) {
-        Ok(()) => (),
-        Err(e) => println!("Error {e}: Couldn't exit terminal process"),
-    }
+    ).expect("Error {e}: Couldn't exit terminal process");
 
-    match disable_raw_mode() {
-        Ok(()) => (),
-        Err(e) => println!("Error {e}: Couldn't diable raw mode"),
-    }
-    Ok(())
+    disable_raw_mode().expect("Error {e}: Couldn't diable raw mode");
 }
