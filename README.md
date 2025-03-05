@@ -1,9 +1,9 @@
-### Scribe 
-#### A command line text editor written in rust
+# Scribe 
+### A command line text editor written in rust
 ---
-Why am I making this?
-- I want to remake the wheel
-- I want to learn how to write rust
-- I want to learn how to use vim and understand how they work
+**Why am I making this?**
+- I think it's a great intermediate project 
+- I've always wanted to learn rust and I figured a project like a text-editor would be pefect
+- My origninal motivation was to learn vim, so I figured if I remade vim I would be pretty good at it
 
 
