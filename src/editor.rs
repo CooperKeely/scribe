@@ -65,13 +65,32 @@ impl Editor{
                 Down => self.window.scroll_down(),
                 Left => execute!(stdout(), MoveLeft(1))?,
                 Right => execute!(stdout(), MoveRight(1))?,
-                Esc => self.mode = EditorMode::EXIT,
-                Char(c) => match c{
-                    'i' => self.mode = EditorMode::INSERT,
-                    'v' => self.mode = EditorMode::VISUAL,
-                    ':' => self.mode = EditorMode::COMMAND,
-                    _ => {},
-                }, 
+                Esc => {
+                    if self.mode != EditorMode::NORMAL {
+                        self.mode = EditorMode::NORMAL;
+                    }else {
+                        self.mode = EditorMode::EXIT;
+                    }
+                },
+                Char(c) => {
+                    if self.mode == EditorMode::NORMAL {
+                        match c{
+                            'i' => self.mode = EditorMode::INSERT,
+                            'v' => self.mode = EditorMode::VISUAL,
+                            ':' => self.mode = EditorMode::COMMAND,
+                            _ => {},
+                        }
+                    }else if self.mode == EditorMode::INSERT {
+                        
+                    }else if self.mode == EditorMode::COMMAND{
+                        
+                    }else if self.mode == EditorMode::VISUAL{
+
+                    }
+                },
+                Backspace => {
+                    if
+                }
                 _ => {},
             }
         }else if let Event::Resize(width,height) = event{

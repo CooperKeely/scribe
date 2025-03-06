@@ -37,7 +37,7 @@ impl Window{
         ).expect("execute!() Failed");
 
         // add lines to buffer
-        let rows: usize = (self.bottom - self.top).into();
+        let rows: usize = self.bottom - self.top;
         for (i, line) in data.into_iter().skip(self.top.into()).take(rows).enumerate() {
            write!(
                 self.write_buffer,
@@ -63,7 +63,7 @@ impl Window{
         execute!(
             stdout(),
             SavePosition,
-            MoveToRow(self.bottom.try_into().unwrap()),
+            MoveTo(0,self.bottom.try_into().unwrap()),
             Clear(ClearType::CurrentLine),
         ).expect("execute!() Failed");
 
