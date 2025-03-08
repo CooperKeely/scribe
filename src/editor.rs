@@ -60,39 +60,18 @@ impl Editor{
         use KeyCode::*;
 
         if let Event::Key(KeyEvent {code, ..}) = event{
+            use EditorMode::*; 
             match code{
-                Up => self.window.scroll_up(),
-                Down => self.window.scroll_down(),
-                Left => self.window.scroll_left(), 
-                Right => self.window.scroll_right(), 
-                Esc => {
-                    if self.mode != EditorMode::NORMAL {
-                        self.mode = EditorMode::NORMAL;
-                    }else {
-                        self.mode = EditorMode::EXIT;
-                    }
-                },
-                Char(c) => {
-                    if self.mode == EditorMode::NORMAL {
-                        match c{
-                            'i' => self.mode = EditorMode::INSERT,
-                            'v' => self.mode = EditorMode::VISUAL,
-                            ':' => self.mode = EditorMode::COMMAND,
-                            'k' => self.window.scroll_up(),
-                            'j' => self.window.scroll_down(),
-                            'h' => self.window.scroll_left(), 
-                            'l' => self.window.scroll_right(), 
-                            _ => {}, 
-                        }
-                    }else if self.mode == EditorMode::INSERT {
-                        
-                    }else if self.mode == EditorMode::COMMAND{
-                        
-                    }else if self.mode == EditorMode::VISUAL{
-
-                    }
-                },
-                Backspace => self.backspace_event_handler(), 
+                Up    | Char('k') => self.window.scroll_up(),
+                Down  | Char('j') => self.window.scroll_down(),
+                Left  | Char('h') => self.window.scroll_left(), 
+                Right | Char('l') => self.window.scroll_right(), 
+                Esc               => self.esc_event_handler(),
+                Backspace         => self.backspace_event_handler(), 
+                Char('i') if self.mode == NORMAL => self.mode = INSERT,
+                Char('v') if self.mode == NORMAL => self.mode = VISUAL,
+                Char(':') if self.mode == NORMAL => self.mode = COMMAND,
+                Char(c) => self.char_event_handler(c),
                 _ => {},
             }
         }else if let Event::Resize(width,height) = event{
@@ -124,5 +103,48 @@ impl Editor{
 
             self.window.update_window();
         }       
+    }
+    
+    fn esc_event_handler(&mut self){
+        if self.mode != EditorMode::NORMAL {
+            self.mode = EditorMode::NORMAL;
+        }else {
+            self.mode = EditorMode::EXIT;
+        }
+    }
+    
+    fn char_event_handler(&mut self, c : char){
+        match self.mode{
+            EditorMode::INSERT => self.insert_char(c),
+            EditorMode::VISUAL => {},
+            EditorMode::COMMAND => {},
+            EditorMode::NORMAL => {},
+            _ => {},
+        }
+    }
+
+    fn insert_char(&mut self, c : char){
+        // get the current positon of the cursor
+        let pos : (u16, u16) = position().expect("unable to read positon");
+        let (mut col, mut row): (usize, usize) = (usize::from(pos.0), usize::from(pos.1));
+        
+        // get current positon within file
+        row = row + self.window.get_top();
+        col -= 3;
+
+        // get line from file:window
+        let mut line : String = self.file.remove(row);
+
+        // get the chars out of the array and remove the char
+        let chars : Vec<(usize, char)> = line.char_indices().collect();
+        if let Some((char_index,_)) = chars.get(col-1){
+            line.insert(*char_index, c);
+        }
+       
+        // reinsert the new line
+        self.file.insert(row, line);
+
+        self.window.update_window();
+
     }
 }
