@@ -3,9 +3,9 @@ pub mod file;
 
 use file::FileIO;
 use window::Window;
-use std::io::{ stdout, Error };
+use std::io::{ Error };
 use std::path::Path;
-use crossterm::{event::*, execute, cursor::{position,MoveLeft, MoveRight}};
+use crossterm::{event::*, cursor::{position}};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -63,8 +63,8 @@ impl Editor{
             match code{
                 Up => self.window.scroll_up(),
                 Down => self.window.scroll_down(),
-                Left => execute!(stdout(), MoveLeft(1))?,
-                Right => execute!(stdout(), MoveRight(1))?,
+                Left => self.window.scroll_left(), 
+                Right => self.window.scroll_right(), 
                 Esc => {
                     if self.mode != EditorMode::NORMAL {
                         self.mode = EditorMode::NORMAL;
@@ -78,7 +78,11 @@ impl Editor{
                             'i' => self.mode = EditorMode::INSERT,
                             'v' => self.mode = EditorMode::VISUAL,
                             ':' => self.mode = EditorMode::COMMAND,
-                            _ => {},
+                            'k' => self.window.scroll_up(),
+                            'j' => self.window.scroll_down(),
+                            'h' => self.window.scroll_left(), 
+                            'l' => self.window.scroll_right(), 
+                            _ => {}, 
                         }
                     }else if self.mode == EditorMode::INSERT {
                         
@@ -88,7 +92,7 @@ impl Editor{
 
                     }
                 },
-                Backspace => self.backspace_handler(), 
+                Backspace => self.backspace_event_handler(), 
                 _ => {},
             }
         }else if let Event::Resize(width,height) = event{
@@ -97,17 +101,28 @@ impl Editor{
         Ok(())
     }
     
-    fn backspace_handler(&mut self){
+    fn backspace_event_handler(&mut self){
         if self.mode == EditorMode::INSERT{
-            println!("Backspace"); 
             // get the current cursor positon
             let pos: (u16, u16) = position().expect("couldn't get position");
-            let pos: (usize, usize) = (usize::from(pos.0), usize::from(pos.1));
+            let (mut col, mut row): (usize, usize) = (usize::from(pos.0), usize::from(pos.1));
             
-            // remove the character and re-insert the line
-            let mut line : String = self.file.remove(pos.1);
-            line.remove(pos.0);
-            self.file.insert(pos.1, line);
+            // get the line index for the file 
+            row = row + self.window.get_top(); 
+            col -= 3; 
+            // get the line 
+            let mut line : String = self.file.remove(row);
+            
+            // get the chars out of the array and remove the char
+            let chars : Vec<(usize, char)> = line.char_indices().collect();
+            if let Some((char_index,_)) = chars.get(col-1){
+                line.remove(*char_index);
+            }
+           
+            // reinsert the new line
+            self.file.insert(row, line);
+
+            self.window.update_window();
         }       
     }
 }

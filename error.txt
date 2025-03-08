@@ -1,0 +1,24 @@
+   Compiling scribe v0.1.0 (/home/cooperkeely/scribe)
+warning: field `file_io` is never read
+  --> src/editor.rs:23:5
+   |
+20 | pub struct Editor{
+   |            ------ field in this struct
+...
+23 |     file_io: FileIO,
+   |     ^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: method `save` is never used
+  --> src/editor/file.rs:39:12
+   |
+10 | impl FileIO{
+   | ----------- method in this implementation
+...
+39 |     pub fn save(&self){} // TODO
+   |            ^^^^
+
+warning: `scribe` (bin "scribe") generated 2 warnings
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.43s
+     Running `target/debug/scribe test_file.txt`
