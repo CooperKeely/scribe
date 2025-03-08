@@ -118,4 +118,8 @@ impl Window{
             self.update = true;
         }
     }
+
+    pub fn get_top(&self) -> usize{
+        self.top
+    }
 }

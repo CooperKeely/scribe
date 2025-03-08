@@ -5,7 +5,7 @@ use file::FileIO;
 use window::Window;
 use std::io::{ stdout, Error };
 use std::path::Path;
-use crossterm::{event::*, execute, cursor::{MoveLeft, MoveRight}};
+use crossterm::{event::*, execute, cursor::{position,MoveLeft, MoveRight}};
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -88,9 +88,7 @@ impl Editor{
 
                     }
                 },
-                Backspace => {
-                    if
-                }
+                Backspace => self.backspace_handler(), 
                 _ => {},
             }
         }else if let Event::Resize(width,height) = event{
@@ -98,5 +96,18 @@ impl Editor{
         }
         Ok(())
     }
-
+    
+    fn backspace_handler(&mut self){
+        if self.mode == EditorMode::INSERT{
+            println!("Backspace"); 
+            // get the current cursor positon
+            let pos: (u16, u16) = position().expect("couldn't get position");
+            let pos: (usize, usize) = (usize::from(pos.0), usize::from(pos.1));
+            
+            // remove the character and re-insert the line
+            let mut line : String = self.file.remove(pos.1);
+            line.remove(pos.0);
+            self.file.insert(pos.1, line);
+        }       
+    }
 }
