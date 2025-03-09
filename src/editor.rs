@@ -62,16 +62,20 @@ impl Editor{
         if let Event::Key(KeyEvent {code, ..}) = event{
             use EditorMode::*; 
             match code{
-                Up    | Char('k') => self.window.scroll_up(),
-                Down  | Char('j') => self.window.scroll_down(),
-                Left  | Char('h') => self.window.scroll_left(), 
-                Right | Char('l') => self.window.scroll_right(), 
-                Esc               => self.esc_event_handler(),
-                Backspace         => self.backspace_event_handler(), 
+                Up         => self.window.scroll_up(),
+                Down       => self.window.scroll_down(),
+                Left       => self.window.scroll_left(), 
+                Right      => self.window.scroll_right(), 
+                Esc        => self.esc_event_handler(),
+                Backspace  => self.backspace_event_handler(), 
                 Char('i') if self.mode == NORMAL => self.mode = INSERT,
                 Char('v') if self.mode == NORMAL => self.mode = VISUAL,
                 Char(':') if self.mode == NORMAL => self.mode = COMMAND,
-                Char(c) => self.char_event_handler(c),
+                Char('h') if self.mode == NORMAL => self.window.scroll_left(),
+                Char('j') if self.mode == NORMAL => self.window.scroll_down(),
+                Char('k') if self.mode == NORMAL => self.window.scroll_up(),
+                Char('l') if self.mode == NORMAL => self.window.scroll_right(),
+                Char(c)    => self.char_event_handler(c),
                 _ => {},
             }
         }else if let Event::Resize(width,height) = event{
@@ -88,7 +92,7 @@ impl Editor{
             
             // get the line index for the file 
             row = row + self.window.get_top(); 
-            col -= 3; 
+            col -= 4; 
             // get the line 
             let mut line : String = self.file.remove(row);
             
@@ -100,7 +104,7 @@ impl Editor{
            
             // reinsert the new line
             self.file.insert(row, line);
-
+            self.window.scroll_left();
             self.window.update_window();
         }       
     }
@@ -143,7 +147,7 @@ impl Editor{
        
         // reinsert the new line
         self.file.insert(row, line);
-
+        self.window.scroll_right();
         self.window.update_window();
 
     }

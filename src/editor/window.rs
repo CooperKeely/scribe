@@ -121,15 +121,15 @@ impl Window{
     
     pub fn scroll_left(&mut self){
         let pos: (u16, u16) = position().expect("position() Failed");
-        let (_, col) : (usize, usize) =  (usize::from(pos.0), usize::from(pos.1));
-        if 3 < col {
+        let (col , _) : (usize, usize) =  (usize::from(pos.0), usize::from(pos.1));
+        if 4 < col {
             execute!(stdout(), MoveLeft(1)).expect("MoveLeft failed");
         }
     }
     
     pub fn scroll_right(&mut self){
         let pos: (u16, u16) = position().expect("position() Failed");
-        let (_, col) : (usize, usize) =  (usize::from(pos.0), usize::from(pos.1));
+        let (col, _) : (usize, usize) =  (usize::from(pos.0), usize::from(pos.1));
         if 3 < col {
             execute!(stdout(), MoveRight(1)).expect("MoveRight failed");
         }

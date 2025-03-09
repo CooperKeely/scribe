@@ -2,7 +2,7 @@ mod editor;
 
 use editor::Editor;
 
-use std::io;
+use std::io::{self, stdout};
 use std::env;
 use std::path::Path;
 use crossterm::{cursor::*, event::*, execute, terminal::*};
@@ -17,7 +17,7 @@ fn main() -> io::Result<()> {
     let file_path: &Path = Path::new(&args[1]);
 
     open_scribe();
-    
+    execute!(stdout(), MoveTo(4,0)).expect("couldn't execute moveto");    
     let mut editor = Editor::new(file_path);
     editor.event_loop();
     
@@ -30,7 +30,7 @@ fn open_scribe(){
     enable_raw_mode().expect("Error {e}: Couldn't enable raw mode"); 
 
     execute!(
-        io::stdout(),
+        stdout(),
         EnableBracketedPaste,
         EnableFocusChange,
         EnableMouseCapture,
@@ -44,7 +44,7 @@ fn open_scribe(){
 
 fn close_scribe() {
     execute!(
-        io::stdout(),
+        stdout(),
         LeaveAlternateScreen,
         DisableBracketedPaste,
         DisableFocusChange,
